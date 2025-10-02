@@ -1,0 +1,24 @@
+gantt
+    title Connection Pool Timeline
+    dateFormat X
+    axisFormat %L ms
+    
+    section Thread 1
+    CheckOut Request    :active, t1_req, 0, 50
+    Wait in Queue      :t1_wait, 50, 150
+    Use Connection     :active, t1_use, 150, 300
+    CheckIn           :milestone, t1_in, 300
+    
+    section Thread 2
+    CheckOut Request    :active, t2_req, 100, 125
+    Wait in Queue      :t2_wait, 125, 300
+    Use Connection     :active, t2_use, 300, 450
+    CheckIn           :milestone, t2_in, 450
+    
+    section Pool State
+    Available Conn: 1   :done, pool1, 0, 150
+    Available Conn: 0   :crit, pool2, 150, 300
+    Available Conn: 1   :done, pool3, 300, 450
+    
+    section Background
+    Maintain minPoolSize :bg1, 0, 500

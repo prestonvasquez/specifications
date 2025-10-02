@@ -1,0 +1,14 @@
+stateDiagram-v2
+    [*] --> paused : create()
+    
+    paused --> ready : ready()
+    paused --> closed : close()
+    
+    ready --> paused : clear()
+    ready --> closed : close()
+    
+    closed --> [*]
+    
+    note right of paused : No checkouts allowed\nNo background activity
+    note right of ready : Normal operations\nBackground maintenance active
+    note right of closed : Permanent shutdown\nAll operations fail

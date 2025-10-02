@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant SDAM as SDAM Monitor
+    participant Pool as ConnectionPool
+    participant WQ as WaitQueue
+    participant BG as BackgroundThread
+    participant Conns as In-Use Connections
+
+    SDAM->>Pool: clear(interruptInUseConnections=true)
+    
+    Pool->>Pool: increment generation
+    Pool->>Pool: set state to "paused"
+    
+    Pool->>WQ: clear all waiting requests
+    WQ-->>WQ: fail all requests with PoolClearedError
+    
+    Pool->>Pool: emit PoolClearedEvent
+    
+    alt interruptInUseConnections is true
+        Pool->>BG: schedule immediate run
+        BG->>Conns: interrupt connections with old generation
+        Conns-->>Conns: fail operations with retryable error
+    end
+    
+    note over Pool: Pool now in "paused" state
+    note over Pool: Awaiting ready() call from SDAM

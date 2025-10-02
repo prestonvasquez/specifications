@@ -1,0 +1,27 @@
+flowchart TD
+    A[Create Connection] --> B[Set state to 'pending']
+    B --> C[Emit ConnectionCreatedEvent]
+    C --> D[Establish TCP Socket]
+    
+    D --> E{TCP Success?}
+    E -->|No| F[Close Connection]
+    E -->|Yes| G[Perform MongoDB Handshake]
+    
+    G --> H{Handshake Success?}
+    H -->|No| F
+    H -->|Yes| I[Handle OP_COMPRESSED]
+    
+    I --> J[Perform Authentication]
+    J --> K{Auth Success?}
+    K -->|No| F
+    K -->|Yes| L[Set state to 'available']
+    
+    L --> M[Emit ConnectionReadyEvent]
+    M --> N[Add to available connections]
+    
+    F --> O[Emit ConnectionClosedEvent]
+    F --> P[Decrement counters]
+    
+    style A fill:#e1f5fe
+    style N fill:#c8e6c9
+    style O fill:#ffcdd2

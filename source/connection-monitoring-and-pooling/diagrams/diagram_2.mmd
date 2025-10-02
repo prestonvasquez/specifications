@@ -1,0 +1,18 @@
+stateDiagram-v2
+    [*] --> pending : create()
+    
+    pending --> available : establish()
+    pending --> closed : establish() fails
+    
+    available --> inUse : checkOut()
+    available --> closed : perish or pool.close()
+    
+    inUse --> available : checkIn() (healthy)
+    inUse --> closed : checkIn() (perished) or error
+    
+    closed --> [*]
+    
+    note right of pending : TCP connection not yet established
+    note right of available : Ready to be checked out
+    note right of inUse : Serving an operation
+    note right of closed : Socket closed, unusable

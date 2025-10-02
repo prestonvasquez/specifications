@@ -1,0 +1,46 @@
+classDiagram
+    class ConnectionPool {
+        +WaitQueue waitQueue
+        +int generation
+        +Map~ObjectId, Tuple~ serviceGenerations
+        +string state
+        +int totalConnectionCount
+        +int availableConnectionCount  
+        +int pendingConnectionCount
+        +Connection checkOut()
+        +void checkIn(Connection)
+        +void clear(boolean interruptInUse)
+        +void ready()
+        +void close()
+    }
+
+    class Connection {
+        +int id
+        +string address
+        +int generation
+        +string state
+        +Socket socket
+    }
+
+    class WaitQueue {
+        +boolean isThreadSafe
+        +boolean isOrdered
+        +void enter(Thread)
+        +void leave(Thread)
+        +Connection waitForConnection(timeout)
+    }
+
+    class ConnectionPoolOptions {
+        +int maxPoolSize
+        +int minPoolSize
+        +int maxIdleTimeMS
+        +int maxConnecting
+        +int waitQueueTimeoutMS
+    }
+
+    ConnectionPool "1" --> "many" Connection : manages
+    ConnectionPool "1" --> "1" WaitQueue : has
+    ConnectionPool --> ConnectionPoolOptions : configuredWith
+    
+    note for Connection "States: pending → available → in use → closed"
+    note for ConnectionPool "States: paused → ready → closed"

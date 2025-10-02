@@ -1,0 +1,40 @@
+sequenceDiagram
+    participant App as Application
+    participant Driver as Driver
+    participant Pool as ConnectionPool
+    participant WQ as WaitQueue
+    participant Conn as Connection
+
+    App->>Driver: request operation
+    Driver->>Pool: checkOut()
+    
+    Pool->>Pool: emit ConnectionCheckOutStartedEvent
+    Pool->>WQ: enter queue
+    
+    alt Available connection exists
+        Pool->>Pool: find available connection
+        Pool->>Pool: check if perished
+        alt Connection is healthy
+            Pool->>Pool: mark as "in use"
+            Pool->>Pool: emit ConnectionCheckedOutEvent
+            Pool->>Driver: return connection
+        else Connection is perished  
+            Pool->>Pool: close perished connection
+            Pool->>Pool: continue search
+        end
+    else No available connections
+        alt Pool not at maxPoolSize
+            Pool->>Conn: create()
+            Pool->>Pool: emit ConnectionCreatedEvent
+            Pool->>Conn: establish()
+            Pool->>Pool: emit ConnectionReadyEvent
+            Pool->>Pool: mark as "in use"
+            Pool->>Pool: emit ConnectionCheckedOutEvent
+            Pool->>Driver: return connection
+        else Pool at maxPoolSize
+            Pool->>WQ: wait for availability or timeout
+        end
+    end
+    
+    WQ->>Pool: leave queue
+    Driver->>App: proceed with operation

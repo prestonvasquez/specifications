@@ -1,0 +1,38 @@
+graph TB
+    subgraph "Application Layer"
+        APP[Application Code]
+    end
+    
+    subgraph "Driver Layer"
+        CRUD[CRUD Operations]
+        SDAM[Server Discovery & Monitoring]
+        SS[Server Selection]
+    end
+    
+    subgraph "CMAP Layer"
+        POOL[Connection Pool]
+        WQ[Wait Queue]
+        CONN[Connections]
+        EVENTS[Pool Events]
+    end
+    
+    subgraph "Network Layer"
+        TCP[TCP Sockets]
+        TLS[TLS Layer]
+        MONGO[MongoDB Protocol]
+    end
+    
+    APP --> CRUD
+    CRUD --> SS
+    SS --> POOL
+    SDAM --> POOL
+    
+    POOL --> WQ
+    POOL --> CONN
+    POOL --> EVENTS
+    
+    CONN --> TCP
+    TCP --> TLS
+    TLS --> MONGO
+    
+    EVENTS -.-> APP
