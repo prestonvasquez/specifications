@@ -553,3 +553,45 @@ covered by Tests 1 through 3.
 > [!NOTE]
 > Cases 1 and 8 only apply to drivers whose API allows `driver.name` to be unset. Drivers that require a name MAY skip
 > them.
+
+### Test 11: Appending metadata containing the delimiter raises an error
+
+Drivers should verify that appending a `DriverInfoOptions` whose fields contain the `|` delimiter raises an error, and
+that the metadata accumulated before the failed append is left unchanged.
+
+These tests require a mechanism for observing handshake documents sent to the server.
+
+##### Parameterized test cases
+
+| Case | Field containing the delimiter | Name          | Version | Platform              |
+| ---- | ------------------------------ | ------------- | ------- | --------------------- |
+| 1    | `name`                         | `frame\|work` | 2.0     | Framework Platform    |
+| 2    | `version`                      | framework     | `2\|0`  | Framework Platform    |
+| 3    | `platform`                     | framework     | 2.0     | `Framework\|Platform` |
+
+##### Running a test case
+
+1. Create a `MongoClient` instance with:
+
+    - `maxIdleTimeMS` set to `1ms`
+
+    - Client metadata initialized with the following `DriverInfoOptions`:
+
+        - name: `library`
+        - version: `1.2`
+        - platform: `Library Platform`
+
+2. Send a `ping` command to the server and verify that the command succeeds.
+
+3. Wait 5ms for the connection to become idle.
+
+4. Append the `DriverInfoOptions` from the selected test case and assert that an error is raised.
+
+5. Wait 5ms for the connection to become idle so that the next operation establishes a new connection and handshakes
+    again.
+
+6. Assert that the intercepted `client` document is unchanged by the failed append, that is:
+
+    - `client.driver.name` is `<driver-name>|library`
+    - `client.driver.version` is `<driver-version>|1.2`
+    - `client.platform` is `<driver-platform>|Library Platform`
